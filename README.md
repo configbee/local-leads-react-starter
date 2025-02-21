@@ -120,6 +120,6 @@ The project includes hidden functionalities—specifically the import and export
 Contributions are welcome! If you have any suggestions, improvements, or bug fixes, please open an issue or submit a pull request.
 
 ## Resources
-- [NOTICE](https://github.com/configbee/cb-client-reactjs/blob/main/NOTICE)
-- [LICENSE](https://github.com/configbee/cb-client-reactjs/blob/main/LICENSE)
+- [NOTICE](https://github.com/configbee/local-leads-react-starter/blob/main/NOTICE)
+- [LICENSE](https://github.com/configbee/local-leads-react-starter/blob/main/LICENSE)
 
