@@ -23,6 +23,7 @@ function App() {
 
   
   const {show_import,show_export} = useCbFlags();
+  const {app_title} = useCbTexts();
 
   useEffect(() => {
     setLeads(getLeads());
@@ -63,7 +64,7 @@ function App() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Lead Manager</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{app_title || "Lead Manager"}</h1>
             <div className="flex gap-4">
               {show_export && (
                 <button
