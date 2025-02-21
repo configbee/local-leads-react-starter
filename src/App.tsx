@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Upload, Plus, Trash2 } from 'lucide-react';
+import {Helmet} from "react-helmet";
+import { Download, Upload, Plus, Trash2, Users, Eye, AlertCircle } from 'lucide-react';
 import { Lead, LeadFormData } from './types';
 import { createLead, saveLeads, getLeads, exportLeadsToCSV, importLeadsFromCSV } from './utils';
 import {
@@ -8,11 +9,25 @@ import {
   useCbNumbers,
   useCbJsons,
   useCbTexts,
+  useCbOperations
 } from 'configbee-react';
+
+function getTargetingProps() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const utmCampaign = urlParams.get('utm_campaign')
+  if (utmCampaign) {
+    return { "utm_campaign":  utmCampaign}
+  } else {
+    return undefined
+  }
+}
+
 
 function App() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [leadToDelete, setLeadToDelete] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  
   const [formData, setFormData] = useState<LeadFormData>({
     name: '',
     email: '',
@@ -22,12 +37,24 @@ function App() {
   });
 
   
-  const {show_import,show_export} = useCbFlags();
-  const {app_title} = useCbTexts();
+  const {show_import, show_export, show_hero} = useCbFlags();
+  const cbStatus = useCbStatus();
+  const {app_title, hero_title, hero_description} = useCbTexts();
+  const cbOperations = useCbOperations();
+
 
   useEffect(() => {
+    handleTargeting()
     setLeads(getLeads());
   }, []);
+
+
+  const handleTargeting = () => {
+    const targetProperties = getTargetingProps()
+    if(targetProperties && cbStatus!=undefined){
+      cbOperations.setTargetProperties(targetProperties)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,9 +67,16 @@ function App() {
   };
 
   const handleDelete = (id: string) => {
-    const updatedLeads = leads.filter(lead => lead.id !== id);
-    setLeads(updatedLeads);
-    saveLeads(updatedLeads);
+    setLeadToDelete(id);
+  };
+
+  const confirmDelete = () => {
+    if (leadToDelete) {
+      const updatedLeads = leads.filter(lead => lead.id !== leadToDelete);
+      setLeads(updatedLeads);
+      saveLeads(updatedLeads);
+      setLeadToDelete(null);
+    }
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +95,25 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
+      <Helmet>
+          <title>{app_title || "Lead Manager"}</title>
+      </Helmet>
       <div className="max-w-4xl mx-auto">
+        {/* Hero Section */}
+        {show_hero && (
+        <div className="bg-gradient-to-r from-indigo-600 to-blue-500 rounded-lg shadow-lg p-8 mb-8 text-white">
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-white/20 p-3 rounded-full">
+              <Users size={40} className="text-white" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-center mb-4">{hero_title || "Lead Manager"}</h1>
+          <p className="text-center text-white/80 max-w-2xl mx-auto">
+            {hero_description || "Efficiently manage and track your leads with our intuitive lead management system. Import, export, and organize your leads all in one place."}
+          </p>
+        </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800">{app_title || "Lead Manager"}</h1>
@@ -186,12 +238,14 @@ function App() {
                       {new Date(lead.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button
-                        onClick={() => handleDelete(lead.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleDelete(lead.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -200,6 +254,35 @@ function App() {
           </div>
         </div>
       </div>
+
+
+      {leadToDelete && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg w-full max-w-md p-6">
+                <div className="flex items-center justify-center mb-4 text-red-600">
+                  <AlertCircle size={48} />
+                </div>
+                <h3 className="text-lg font-semibold text-center mb-2">Confirm Delete</h3>
+                <p className="text-gray-600 text-center mb-6">
+                  Are you sure you want to delete this lead? This action cannot be undone.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={() => setLeadToDelete(null)}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
     </div>
   );
 }
