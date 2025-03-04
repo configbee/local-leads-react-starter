@@ -48,6 +48,9 @@ function App() {
     setLeads(getLeads());
   }, []);
 
+  useEffect(() => {
+    handleTargeting()
+  }, [window.location.search, cbStatus])
 
   const handleTargeting = () => {
     const targetProperties = getTargetingProps()
